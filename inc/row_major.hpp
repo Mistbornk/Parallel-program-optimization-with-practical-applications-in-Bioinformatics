@@ -199,18 +199,15 @@ Row_Major_Matrix<T> Row_Major_Matrix<T>::operator%(const Column_Major_Matrix<T>&
 	size_t N = this->cols;
 	size_t rhs_N = rhs.rowSize();
 	size_t P = rhs.colSize();
-
 	// check dimension
 	if (N != rhs_N) {
 		throw std::runtime_error("Matrix dimension mismatch for multiplication.");
 	}
-
 	// initial parameter
 	Row_Major_Matrix<T> result(M, P);
 	std::vector<std::thread> threads;
 	const int num_threads = 10;
 	std::mutex mtx;
-
 	// define a work lambda for thread
 	auto work = [&](const int thread_id) {
 		for (size_t i=thread_id; i<M; i+=num_threads) {
@@ -227,15 +224,14 @@ Row_Major_Matrix<T> Row_Major_Matrix<T>::operator%(const Column_Major_Matrix<T>&
 			}
 		}		
 	};
-
+	// add threads
 	for (int t=0; t<num_threads; t++) {
 		threads.emplace_back(work, t);
 	}
-
-	for (auto& t:threads) {
+	// wait threads
+	for (auto& t : threads) {
 		t.join();
 	}
-
 	return result;
 }
 

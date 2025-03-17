@@ -22,15 +22,25 @@ int main() {
     Column_Major_Matrix<int> B(size, size);
 	Row_Major_Matrix<int> D(size, size);
 
-    // **測試單執行緒版本**
+    //// **測試單執行緒版本**
+    //auto start = std::chrono::high_resolution_clock::now();
+    //Row_Major_Matrix<int> C1 = A * B;
+    //auto end = std::chrono::high_resolution_clock::now();
+    //double t_single = std::chrono::duration<double>(end - start).count();  
+
+    //// **測試多執行緒版本**
+    //start = std::chrono::high_resolution_clock::now();
+    //Row_Major_Matrix<int> C2 = A % B;
+    //end = std::chrono::high_resolution_clock::now();
+    //double t_multi = std::chrono::duration<double>(end - start).count();
+
     auto start = std::chrono::high_resolution_clock::now();
-    Row_Major_Matrix<int> C1 = A * B;
+    Column_Major_Matrix<int> C1 = B * A;
     auto end = std::chrono::high_resolution_clock::now();
     double t_single = std::chrono::duration<double>(end - start).count();  
 
-    // **測試多執行緒版本**
     start = std::chrono::high_resolution_clock::now();
-    Row_Major_Matrix<int> C2 = A % B;
+    Column_Major_Matrix<int> C2 = B * A;
     end = std::chrono::high_resolution_clock::now();
     double t_multi = std::chrono::duration<double>(end - start).count();
 

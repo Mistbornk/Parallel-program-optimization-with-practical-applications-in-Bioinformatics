@@ -40,6 +40,7 @@ public:
 
 	// matrix multiplication
 	Column_Major_Matrix<T> operator*(const Row_Major_Matrix<T>& rhs) const;
+	Column_Major_Matrix<T> operator%(const Row_Major_Matrix<T>& rhs) const;
 
 	// cout << 
 	template <typename U>
@@ -172,7 +173,7 @@ Column_Major_Matrix<T> Column_Major_Matrix<T>::operator*(const Row_Major_Matrix<
 	size_t N = this->cols;
 	size_t rhs_N = rhs.rowSize();
 	size_t P = rhs.colSize();
-
+	// check dimension
 	if (N != rhs_N) {
 		throw std::runtime_error("Matrix dimension mismatch for multiplication.");
 	}
@@ -186,6 +187,46 @@ Column_Major_Matrix<T> Column_Major_Matrix<T>::operator*(const Row_Major_Matrix<
 			}
 			result(i, j) = sum;
 		}
+	}
+	return result;
+}
+
+template <typename T>
+Column_Major_Matrix<T> Column_Major_Matrix<T>::operator%(const Row_Major_Matrix<T>& rhs) const {
+	size_t M = this->rows;
+	size_t N = this->cols;
+	size_t rhs_N = rhs.rowSize();
+	size_t P = rhs.colSize();
+	// check dimension
+	if (N != rhs_N) {
+		throw std::runtime_error("Matrix dimension mismatch for multiplication.");
+	}
+	// initial parameter
+	Column_Major_Matrix<T> result(M, P);
+	std::vector<std::thread> threads;
+	const int num_threads = 10;
+	std::mutex mtx;
+	// define a work lambda for thread
+	auto work = [&](const int thread_id) {
+		for (size_t i=thread_id; i<M; i+=num_threads) {
+			for (size_t j=0; j<P; j++) {
+				T sum = T();
+				for (size_t k=0; k<N; k++) {
+					sum += all_column[k][i] * rhs(k, j);
+				}
+				mtx.lock();
+				result(i, j) = sum;
+				mtx.unlock();
+			}
+		}
+	};
+	// add threads
+	for (int t=0; t<num_threads; t++) {
+		threads.emplace_back(work, t);
+	}
+	// wait threads
+	for (auto& t : threads) {
+		t.join();
 	}
 	return result;
 }
