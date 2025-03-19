@@ -6,7 +6,7 @@
 #include <thread>
 #include <mutex>
 #include <cstddef> 
-#include "col_major.hpp"
+#include "colMajor.hpp"
 
 template <typename T>
 class Column_Major_Matrix;
@@ -42,6 +42,10 @@ public:
 	// matrix multiplication
 	Row_Major_Matrix<T> operator*(const Column_Major_Matrix<T>& rhs) const;
 	Row_Major_Matrix<T> operator%(const Column_Major_Matrix<T>& rhs) const;
+
+	// equal
+	bool operator==(const Row_Major_Matrix<T>& other) const;
+	bool operator==(const Column_Major_Matrix<T>& other) const;
 
 	// cout << matrix
 	template <typename U>
@@ -218,9 +222,9 @@ Row_Major_Matrix<T> Row_Major_Matrix<T>::operator%(const Column_Major_Matrix<T>&
 				}
 				// lock to save the value
 				// std::lock_guard<std::mutex> lock(mtx); //automaticaly unlock while out of domain
-				mtx.lock();
+				//mtx.lock();
 				result(i, j) = sum;
-				mtx.unlock();
+				//mtx.unlock();
 			}
 		}		
 	};
@@ -233,6 +237,24 @@ Row_Major_Matrix<T> Row_Major_Matrix<T>::operator%(const Column_Major_Matrix<T>&
 		t.join();
 	}
 	return result;
+}
+
+template <typename T>
+bool Row_Major_Matrix<T>::operator==(const Row_Major_Matrix<T>& other) const {
+	if (rows != other.rows || cols != other.cols) return false;
+	for (size_t i=0; i<rows; i++) {
+		if (all_row[i] != other.all_row[i]) return false;
+	}
+	return true;
+}
+
+template <typename T>
+bool Row_Major_Matrix<T>::operator==(const Column_Major_Matrix<T>& other) const {
+	if (rows != other.rowSize() || cols != other.colSize()) return false;
+	for (size_t i=0; i<rows; i++) {
+		if (all_row[i] != other.getRow(i)) return false;
+	}
+	return true;
 }
 
 template <typename T>

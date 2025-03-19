@@ -6,12 +6,19 @@ OBJDIR = obj
 
 SOURCES = $(wildcard $(SRCDIR)/*.cpp)
 OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
-EXEC = matrix
 
-all: $(EXEC)
+EXEC_MATRIX = matrix_test
+EXEC_THREADPOOL = threadpool_test
+EXECUTABLES = $(EXEC_MATRIX) $(EXEC_THREADPOOL)
 
-$(EXEC): $(OBJECTS)
-	@echo "Linking $(EXEC)..."
+all: $(EXECUTABLES)
+
+$(EXEC_MATRIX): $(OBJDIR)/matrix_test.o
+	@echo "Linking $@..."
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(EXEC_THREADPOOL): $(OBJDIR)/threadpool_test.o $(OBJDIR)/threadPool.o
+	@echo "Linking $@..."
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
@@ -22,7 +29,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 clean:
-	rm -rf $(OBJDIR) $(EXEC)
+	rm -rf $(OBJDIR) $(EXECUTABLES)
 
-debug: $(EXEC)
-	cgdb ./$(EXEC)
+debug: $(EXEC_MATRIX)
+	cgdb ./$(EXEC_MATRIX)
