@@ -71,11 +71,20 @@ Column_Major_Matrix<int> B(size, size);
 Row_Major_Matrix<int> C1 = A * B;
 Row_Major_Matrix<int> C2 = A % B;
 ```
-Output:
-- True/False: Verify that `C1` (original result) and `C2` (multi-threaded result) are identical.  
-- Original Time
-- Multi-thread Time (10 Threads)
-- Speedup
+Output: 
+```
+Basic test success
+------Row major x Column major------
+True/False: Verify that `C1` (original result) and `C2` (multi-threaded result) are identical. 
+original time (seconds)
+Multi-thread time (seconds)
+Speedup
+------Column major x Row major------
+True/False: Verify that `C1` (original result) and `C2` (multi-threaded result) are identical. 
+original time (seconds)
+Multi-thread time (seconds)
+Speedup
+```
 ---
 
 ### **Thread Pool Test**  

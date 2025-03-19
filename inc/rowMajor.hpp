@@ -14,6 +14,9 @@ class Column_Major_Matrix;
 template <typename T>
 class Row_Major_Matrix {
 public:	
+	size_t rows, cols;
+	std::vector<std::vector<T>> all_row;
+
 	// rule of five (six ?)
 	Row_Major_Matrix(size_t r, size_t c);
 	Row_Major_Matrix(const Row_Major_Matrix& other);
@@ -50,10 +53,6 @@ public:
 	// cout << matrix
 	template <typename U>
 	friend std::ostream& operator<<(std::ostream& os, const Row_Major_Matrix<U>& matrix);
-
-private:
-	size_t rows, cols;
-	std::vector<std::vector<T>> all_row;
 };
 
 
@@ -177,8 +176,8 @@ template <typename T>
 Row_Major_Matrix<T> Row_Major_Matrix<T>::operator*(const Column_Major_Matrix<T>& rhs) const {
 	size_t M = this->rows;
 	size_t N = this->cols;
-	size_t rhs_N = rhs.rowSize();
-	size_t P = rhs.colSize();
+	size_t rhs_N = rhs.rows;
+	size_t P = rhs.cols;
 
 	if (N != rhs_N) {
 		throw std::runtime_error("Matrix dimension mismatch for multiplication.");
@@ -189,7 +188,7 @@ Row_Major_Matrix<T> Row_Major_Matrix<T>::operator*(const Column_Major_Matrix<T>&
 		for (size_t j=0; j<P; j++) {
 			T sum = T();
 			for (size_t k=0; k<N; k++) {
-				sum += all_row[i][k] * rhs(k, j);
+				sum += all_row[i][k] * rhs.all_column[k][j];
 			}
 			result(i, j) = sum;
 		}
@@ -201,8 +200,8 @@ template <typename T>
 Row_Major_Matrix<T> Row_Major_Matrix<T>::operator%(const Column_Major_Matrix<T>& rhs) const {
 	size_t M = this->rows;
 	size_t N = this->cols;
-	size_t rhs_N = rhs.rowSize();
-	size_t P = rhs.colSize();
+	size_t rhs_N = rhs.rows;
+	size_t P = rhs.cols;
 	// check dimension
 	if (N != rhs_N) {
 		throw std::runtime_error("Matrix dimension mismatch for multiplication.");
@@ -218,13 +217,9 @@ Row_Major_Matrix<T> Row_Major_Matrix<T>::operator%(const Column_Major_Matrix<T>&
 			for (size_t j=0; j<P; j++) {
 				T sum = T();
 				for (size_t k=0; k<N; k++) {
-					sum += all_row[i][k] * rhs(k, j);
+					sum += all_row[i][k] * rhs.all_column[k][j];
 				}
-				// lock to save the value
-				// std::lock_guard<std::mutex> lock(mtx); //automaticaly unlock while out of domain
-				//mtx.lock();
 				result(i, j) = sum;
-				//mtx.unlock();
 			}
 		}		
 	};
@@ -250,7 +245,7 @@ bool Row_Major_Matrix<T>::operator==(const Row_Major_Matrix<T>& other) const {
 
 template <typename T>
 bool Row_Major_Matrix<T>::operator==(const Column_Major_Matrix<T>& other) const {
-	if (rows != other.rowSize() || cols != other.colSize()) return false;
+	if (rows != other.rows || cols != other.cols) return false;
 	for (size_t i=0; i<rows; i++) {
 		if (all_row[i] != other.getRow(i)) return false;
 	}
@@ -259,8 +254,8 @@ bool Row_Major_Matrix<T>::operator==(const Column_Major_Matrix<T>& other) const 
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const Row_Major_Matrix<T>& matrix) {
-    size_t rows = matrix.rowSize();
-    size_t cols = matrix.colSize();
+    size_t rows = matrix.rows;
+    size_t cols = matrix.cols;
 
     os << "Row_Major_Matrix (" << rows << " x " << cols << "):\n";
     for (size_t i = 0; i < rows; ++i) {

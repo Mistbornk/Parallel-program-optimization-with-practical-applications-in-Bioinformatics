@@ -18,34 +18,24 @@ int main() {
 
 	Row_Major_Matrix<int> rr_single = cc * rr;
 	
+    cout << "Basic test success\n";
+
     /* test overload % */
 	int size = 1000;  // set matrix size
     Row_Major_Matrix<int> A(size, size);
     Column_Major_Matrix<int> B(size, size);
 
     /* Row major x  Column major */
-    // sigle 
+    cout << "------Row major x Column major------\n";
     auto start = chrono::high_resolution_clock::now();
     Row_Major_Matrix<int> C1 = A * B;
     auto end = chrono::high_resolution_clock::now();
     double t_single = chrono::duration<double>(end - start).count();  
 
-    // multi thread
     start = chrono::high_resolution_clock::now();
     Row_Major_Matrix<int> C2 = A % B;
     end = chrono::high_resolution_clock::now();
-    double t_multi = chrono::duration<double>(end - start).count();
-
-    /* Column major x Row major */
-    //auto start = chrono::high_resolution_clock::now();
-    //Column_Major_Matrix<int> C1 = B * A;
-    //auto end = chrono::high_resolution_clock::now();
-    //double t_single = chrono::duration<double>(end - start).count();  
-
-    //start = chrono::high_resolution_clock::now();
-    //Column_Major_Matrix<int> C2 = B * A;
-    //end = chrono::high_resolution_clock::now();
-    //double t_multi = chrono::duration<double>(end - start).count();
+    auto t_multi = chrono::duration<double>(end - start).count();
 
     /* Outcome */
     if (C1 == C2) cout << "True" << endl;
@@ -54,5 +44,23 @@ int main() {
     cout << "Multi-thread time: " << t_multi << " seconds\n";
     cout << "Speedup: " << t_single / t_multi << "x\n";
 
+    /* Column major x Row major */
+    cout << "------Column major x Row major------\n";
+    start = chrono::high_resolution_clock::now();
+    Column_Major_Matrix<int> D1 = B * A;
+    end = chrono::high_resolution_clock::now();
+    t_single = chrono::duration<double>(end - start).count();  
+
+    start = chrono::high_resolution_clock::now();
+    Column_Major_Matrix<int> D2 = B % A;
+    end = chrono::high_resolution_clock::now();
+    t_multi = chrono::duration<double>(end - start).count();
+
+    /* Outcome */
+    if (D1 == D2) cout << "True" << endl;
+    else cout << "False" <<endl;
+    cout << "original time: " << t_single << " seconds\n";
+    cout << "Multi-thread time: " << t_multi << " seconds\n";
+    cout << "Speedup: " << t_single / t_multi << "x\n";
     return 0;
 }
