@@ -10,6 +10,28 @@
 ---
 
 ## Structure:
-📁 src/ # Source files ├── rowMajor.hpp # Row-major matrix class ├── colMajor.hpp # Column-major matrix class ├── matrix_test.cpp # Matrix operations test ├── threadPool.hpp # ThreadPool class ├── threadPool.cpp # ThreadPool implementation ├── threadpool_test.cpp # ThreadPool test program 📁 obj/ # Compiled object files 📁 bin/ # Executable files 📁 include/ # Header files (if needed) 📄 Makefile # Build system 📄 README.md # Documentation
+.
+├── src/            	   	# Source code directory
+│   ├── threadPool.cpp     	# Thread Pool implementation
+│   ├── matrix_test.cpp    	# Matrix multiplication test executable
+│   ├── threadpool_test.cpp # Thread Pool test executable
+├── inc/           			# Header files
+│   ├── rowMajor.hpp       	# Row-Major matrix class and implementation
+│   ├── colMajor.hpp       	# Column-Major matrix class and implementation
+│   ├── threadPool.hpp    	# Thread Pool class
+├── Makefile           # Build script
+├── README.md          # Project documentation
 
 
+## Usage
+### ** Compile the HW **  
+To build all executables, run:  
+```
+make
+```
+This will compile:  
+- `./matrix_test`  
+- `./threadpool_test`  
+---
+### **Clean build files**  
+To remove compiled object files (`.o`) and executables, run:  
