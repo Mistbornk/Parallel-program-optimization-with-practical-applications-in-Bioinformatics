@@ -10,6 +10,7 @@
 ---
 
 ## Structure:
+```plaintext
 .
 ├── src/            	   	# Source code directory
 │   ├── threadPool.cpp     	# Thread Pool implementation
@@ -21,7 +22,7 @@
 │   ├── threadPool.hpp    	# Thread Pool class
 ├── Makefile           # Build script
 ├── README.md          # Project documentation
-
+```
 
 ## Usage
 ### ** Compile the HW **  
@@ -33,5 +34,23 @@ This will compile:
 - `./matrix_test`  
 - `./threadpool_test`  
 ---
+
 ### **Clean build files**  
 To remove compiled object files (`.o`) and executables, run:  
+```
+make clean
+```
+---
+
+### **Matrix Multiplication Test**  
+To execute matrix multiplication tests:
+```
+./matrix_test
+```
+---
+
+### **Thread Pool Test**  
+To execute the thread pool test:  
+```
+./threadpool_test
+```
