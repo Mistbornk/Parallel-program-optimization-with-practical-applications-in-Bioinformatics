@@ -1,5 +1,6 @@
 #include "threadPool.hpp"
 #include <iostream>
+#include <sstream>
 std::vector<std::string> thread_logs; 
 
 ThreadPool::ThreadPool(size_t num_threads) : stop(false) {
