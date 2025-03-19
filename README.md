@@ -105,7 +105,7 @@ for (int i = 0; i < 4; ++i) {
 Output:
 - print_1 results
 - Print_2 results
-- 5 Thread
+- [ThreadPool Summary] follow by 5 Thread INFO
 	- Thread ID
 	- The total running time
 	- The total life time
