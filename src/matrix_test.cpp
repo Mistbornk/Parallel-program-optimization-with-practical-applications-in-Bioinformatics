@@ -50,7 +50,7 @@ int main() {
     /* Outcome */
     if (C1 == C2) cout << "True" << endl;
     else cout << "False" <<endl;
-    cout << "Single-thread time: " << t_single << " seconds\n";
+    cout << "original time: " << t_single << " seconds\n";
     cout << "Multi-thread time: " << t_multi << " seconds\n";
     cout << "Speedup: " << t_single / t_multi << "x\n";
 
