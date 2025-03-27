@@ -7,7 +7,9 @@ int main() {
     FMIndex fm(T);
 
     string pattern = "TTA";
+
     auto result = fm.query(pattern);
+	cout << endl;
 	if (result.empty()) cout << "No results\n";
 	else  {
 		cout << "Pattern \"" << pattern << "\" found at positions: ";
@@ -17,7 +19,6 @@ int main() {
 			int n = T.size();
 			cout << (T.substr(pos-1, n)) <<endl;
 		}
-		cout << endl;
 	}
     return 0;
 }
