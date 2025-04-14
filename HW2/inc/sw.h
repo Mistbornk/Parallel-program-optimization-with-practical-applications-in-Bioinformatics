@@ -1,23 +1,15 @@
 #ifndef SW_H
 #define SW_H
-
 #include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <xsimd/xsimd.hpp>
-
-using xsimd::batch;
-using xsimd::batch_cast;
-using simd_t = xsimd::batch<uint8_t, xsimd::default_arch>;
-
-inline simd_t saturated_add(const simd_t& a, const simd_t& b) {
-    return xsimd::min(a + b, simd_t(255));
-}
-
-inline simd_t saturated_sub(const simd_t& a, const simd_t& b) {
-    return xsimd::max(a - b, simd_t(0));
-}
+#define BANDWIDTH 25
+#define MATCH 2
+#define MISTMATH 2
+#define GAPOPEN 3
+#define GAPEXTEND 1
 
 std::string read_fasta_sequence(const std::string& filename);
 
@@ -28,14 +20,22 @@ struct SmithWaterman {
     std::string match_line;
     int start1, end1, start2, end2;
 };
+struct Position {
+    int end1, end2;
+};
 
-SmithWaterman banded_smith_waterman(const std::string& seq1, const std::string& seq2,
-    int band_width = 20, int match = 2, int mismatch = -2, int gap_open = -3, int gap_extend = -1);
+SmithWaterman banded_smith_waterman(const std::string& s1, const std::string& s2,
+    int band_width = BANDWIDTH, int match = MATCH, int mismatch = MISTMATH, int gap_open = GAPOPEN, int gap_extend = GAPEXTEND);
 
-SmithWaterman xsimd_smith_waterman(const std::string& s1, const std::string& s2,
-    int match = 2, int mismatch = -2, int gap_open = -3, int gap_extend = -1);
+Position  striped_smith_waterman(const std::vector<int16_t> &ref, const std::vector<int16_t> &query,
+    int match = MATCH, int mismatch = MISTMATH, int gap_open = GAPOPEN, int gap_extend = GAPEXTEND);
 
-std::vector<simd_t> build_query_profile(const std::vector<uint8_t>& read,
-    int match, int mismatch, uint8_t bias);
+int naive_sw(const std::string& s1, const std::string& s2,
+    int match = MATCH, int mismatch = MISTMATH, int gap_open = GAPOPEN, int gap_extend = GAPEXTEND);
+
+SmithWaterman naive_sw_traceback(const std::string& s1, const std::string& s2, int end_i, int end_j,
+    int match = MATCH, int mismatch = MISTMATH, int gap_open = GAPOPEN, int gap_extend = GAPEXTEND);
+
+std::vector<int16_t> seq2vec(const std::string &s);
 
 #endif
