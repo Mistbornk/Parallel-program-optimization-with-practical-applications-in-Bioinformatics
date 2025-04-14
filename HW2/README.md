@@ -6,7 +6,7 @@ This project implements the Smith-Waterman local alignment algorithm in two mode
 - **Baseline (non-SIMD) version**
 - **XSIMD-accelerated version** using `xsimd` for vectorized performance
 
-## 🛠 Build Instructions
+## Build Instructions
 
 ### Prerequisites
 - C++20 compiler (e.g., `g++` version supporting `-std=c++20`)
@@ -34,7 +34,7 @@ To remove compiled objects and executable:
 make clean
 ```
 
-## ✅ Expected Output Format
+## Expected Output Format
 
 ```
 ==================================
@@ -57,14 +57,4 @@ Execution time: 0.000022 seconds
 Speedup       : 5.033744x
 ```
 
-## 📁 File Structure
-
-- `main_test.cpp` — entry point and test runner
-- `bsw.cpp` / `bsw.h` — baseline implementation
-- `ssw.cpp` / `ssw.h` — XSIMD-based striped SW
-- `Makefile` — build and test automation
-- `seq1.fa`, `seq2.fa` — example input sequences
-
 ---
-
-Created with ❤️ for SIMD-accelerated sequence alignment.
