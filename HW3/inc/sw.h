@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <xsimd/xsimd.hpp>
+#define BANDWIDTH 25
 #define MATCH 2
 #define MISTMATH 1
 #define GAPOPEN 1
@@ -28,6 +29,12 @@ struct Position {
 
 SmithWaterman striped_smith_waterman(std::string_view ref, std::string_view query,
     int16_t match = MATCH, int16_t mismatch = MISTMATH, int16_t gap_open = GAPOPEN, int16_t gap_extend = GAPEXTEND);
+
+SmithWaterman cuda_smith_waterman(std::string_view ref, std::string_view query,
+    int match = MATCH, int mismatch = MISTMATH, int gap_open = GAPOPEN, int gap_extend = GAPEXTEND);
+
+SmithWaterman banded_smith_waterman(const std::string& s1, const std::string& s2,
+    int band_width = BANDWIDTH, int match = MATCH, int mismatch = MISTMATH, int gap_open = GAPOPEN, int gap_extend = GAPEXTEND);
 
 SmithWaterman naive_sw(const std::string& s1, const std::string& s2,
     int match = MATCH, int mismatch = MISTMATH, int gap_open = GAPOPEN, int gap_extend = GAPEXTEND);

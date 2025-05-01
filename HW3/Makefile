@@ -1,25 +1,34 @@
 CXX = g++
+NVCC = nvcc
+
 CXXFLAGS = -std=c++20 -Wall -O3 -I./inc -march=native -g
+NVCCFLAGS = -std=c++20 -O3 -arch=sm_60 -I./inc -diag-suppress=2189
 
 SRCDIR = src
 OBJDIR = obj
 BINDIR = bin
 
-SOURCES = $(wildcard $(SRCDIR)/*.cpp)
-OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
+SOURCES_CPP = $(wildcard $(SRCDIR)/*.cpp)
+SOURCES_CU  = $(wildcard $(SRCDIR)/*.cu)
+OBJECTS_CPP = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES_CPP))
+OBJECTS_CU  = $(patsubst $(SRCDIR)/%.cu,$(OBJDIR)/%.o,$(SOURCES_CU))
 
 EXEC = main_test
 EXECUTABLES = $(EXEC)
 
 all: $(EXECUTABLES)
 
-$(EXEC): $(OBJECTS)
+$(EXEC): $(OBJECTS_CPP) $(OBJECTS_CU)
 	@echo "Linking $@..."
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(NVCC) -o $@ $^ -lcudart
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
-	@echo "Compiling $<..."
+	@echo "Compiling C++ $<..."
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cu | $(OBJDIR)
+	@echo "Compiling CUDA $<..."
+	$(NVCC) $(NVCCFLAGS) -c $< -o $@
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
@@ -31,5 +40,5 @@ test: $(EXEC)
 	@echo "Running test case:"
 	./$(EXEC) seq1.fa seq2.fa
 
-debug: $(BINDIR)/$(EXEC)
-	cgdb ./$(BINDIR)/$(EXEC)
+debug: $(EXEC)
+	cgdb ./$(EXEC)

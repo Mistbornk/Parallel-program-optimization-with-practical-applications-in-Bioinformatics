@@ -4,11 +4,11 @@
 #include <string>
 #include <array>
 #include <algorithm>
+#include <iomanip>
 #include <xsimd/xsimd.hpp>
 
 constexpr auto kBases = uint8_t{4};
 using sub_t = std::array<std::array<int16_t, kBases>, kBases>;
-using vector_unaligned = std::vector<value_type>;
 using vector_aligned = std::vector<value_type, xsimd::default_allocator<value_type>>;
 
 sub_t substitution_matrix(int16_t m, int16_t x) {
@@ -32,8 +32,8 @@ uint8_t encode(char c) {
 
 SmithWaterman striped_smith_waterman(std::string_view ref, std::string_view query, 
                                  int16_t match, int16_t mismatch, int16_t gap_open, int16_t gap_extend) {
-
     constexpr std::size_t batchSize = xsimd::batch<value_type>::size;
+	//std::cout << "batch size: "<<batchSize<<std::endl;
     size_t segLen = (size(query) + batchSize) / batchSize;
     size_t profile_len = segLen * batchSize;
 	sub_t sub_mat = substitution_matrix(match, -mismatch);
@@ -157,7 +157,6 @@ SmithWaterman striped_smith_waterman(std::string_view ref, std::string_view quer
 		}
 	}
 	size_t i = max_i, j = max_j, k = max_k;
-	value_type best_score = 0;
 	// if j==0: 跳回上一列最後一個 stripe
 	auto move_left = [&]() {
         if (j == 0) {

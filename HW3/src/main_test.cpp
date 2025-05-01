@@ -4,6 +4,7 @@
 #include <chrono>
 #include <random>
 #include <unistd.h>
+
 #define TRY 100
 using namespace std;
 using namespace chrono;
@@ -27,7 +28,7 @@ void randomTest() {
         for (int i = 0; i < len2; ++i) q += bases[base_dist(rng)];
 
         auto result1 = naive_sw(r, q);
-        auto result2 = striped_smith_waterman(r, q);
+        auto result2 = cuda_smith_waterman(r, q);
         if (result1.score == result2.score) ++correct;
         //tuple t1 = {result1.start1, result1.start2, result1.end1, result1.end2};
         //tuple t2 = {result2.start1, result2.start2, result2.end1, result2.end2};
@@ -65,7 +66,7 @@ void PrintOutcome(SmithWaterman& result, string method, double time_ms) {
         }
     }
 
-    std::cout << "Method: " << method << "\n";
+    std::cout << "Method: " << method << "\n\n";
     std::cout << "Seq1:  " << std::setw(5) << result.start1 << "   " << colored_seq1 << "   " << result.end1 << "\n";
     std::cout << "       " << "        " << colored_match << "\n";
     std::cout << "Seq2:  " << std::setw(5) << result.start2 << "   " << colored_seq2 << "   " << result.end2 << "\n";
@@ -84,33 +85,48 @@ int main(int argc, char* argv[]) {
     string seq1 = read_fasta_sequence(argv[1]);
     string seq2 = read_fasta_sequence(argv[2]);
 
-    SmithWaterman result1, result2;
-    double time_naive = 0.0, time_striped = 0.0;
+    SmithWaterman result1, result2, result3, result4;
+    double time_naive = 0.0, time_striped = 0.0, time_cuda = 0.0, time_banded = 0.0;
 
-    // Ground truth
+    // === Ground truth === //
+    //cout << "==================================" << endl;
+    //auto start1 = high_resolution_clock::now();
+    //result1 = naive_sw(seq1, seq2);
+    //auto end1 = high_resolution_clock::now();
+    //time_naive = duration_cast<duration<double, milli>>(end1 - start1).count();
+    ////cout << "GroundTruth Score: " << result1.score << "\n"; 
+    //PrintOutcome(result1, "Naive", time_naive);
+ 
+    // === striped smith waterman === //
     cout << "==================================" << endl;
-    cout << "Running naive Smith-Waterman..." << endl;
-    auto start1 = high_resolution_clock::now();
-    result1 = naive_sw(seq1, seq2);
-    auto end1 = high_resolution_clock::now();
-    time_naive = duration_cast<duration<double, milli>>(end1 - start1).count();
-    PrintOutcome(result1, "Naive", time_naive);
-
-    //// striped smith waterman 
-    cout << "==================================" << endl;
-    cout << "Running striped Smith-Waterman..." << endl;
     auto start2 = high_resolution_clock::now();
     result2 = striped_smith_waterman(seq1, seq2);
     auto end2 = high_resolution_clock::now();
     time_striped = duration_cast<duration<double, milli>>(end2 - start2).count();
     PrintOutcome(result2, "Striped", time_striped);
 
-    // Speedup
+    
+    // === cuda smith waterman === //
+    cout << "==================================" << endl;
+    auto start3 = high_resolution_clock::now();
+    result3 = cuda_smith_waterman(seq1, seq2);
+    auto end3 = high_resolution_clock::now();
+    time_cuda = duration_cast<duration<double, milli>>(end3 - start3).count();
+    PrintOutcome(result3, "CUDA", time_cuda);
+
+    // === banded smith waterman === //
+    //cout << "==================================" << endl;
+    //auto start4 = high_resolution_clock::now();
+    //result4 = banded_smith_waterman(seq1, seq2);
+    //auto end4 = high_resolution_clock::now();
+    //time_banded = duration_cast<duration<double, milli>>(end4 - start4).count();
+    //PrintOutcome(result4, "Banded", time_banded);
+
+    // === Speedup === //
     cout << "==================================" << endl;
     cout << std::fixed << std::setprecision(2);
-    cout << "Speedup (Naive / Striped): " << time_naive / time_striped << "x" << endl;
+    cout << "Speedup (CUDA / Striped): " << time_cuda/ time_striped << "x" << endl;
 
-
-    randomTest();
+    //randomTest();
     return 0;
 }
