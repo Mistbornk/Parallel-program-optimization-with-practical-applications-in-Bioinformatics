@@ -5,13 +5,19 @@
 #include <stdlib.h>
 #include <cuda_runtime.h>
 
+struct MaxScore {
+    int score;
+    int i;
+    int j;
+};
+
 __device__ int dev_max4(int a, int b, int c, int d) {
     return max(max(a, b), max(c, d));
 }
 
 __global__ void cuda_sw_kernel_expand(
     int* H, int* E, int* F, const char* ref, const char* query, int k,
-    int M, int N, int match, int mismatch, int gap_open, int gap_extend
+    int M, int N, int match, int mismatch, int gap_open, int gap_extend, MaxScore* d_max
 ) {
     // i: ref, j:query, k:thread or 斜對角 idx (start on 1)
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
@@ -32,19 +38,25 @@ __global__ void cuda_sw_kernel_expand(
         H[idx] = h;
         E[idx] = e;
         F[idx] = f;
+
+        // 儲存最大值（只在值變大時記錄座標）
+        int old = atomicMax(&(d_max->score), h);
+        if (h > old) {
+            d_max->i = i;
+            d_max->j = j;
+        }
     }
 }
 
 __global__ void cuda_sw_kernel_shrink(
     int* H, int* E, int* F, const char* ref, const char* query, int k,
-    int M, int N, int match, int mismatch, int gap_open, int gap_extend
+    int M, int N, int match, int mismatch, int gap_open, int gap_extend, MaxScore* d_max
 ) {
     int i_start = max(1, k - N + 1);
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     int i = tid + i_start;
     int j = k + 1 - i;
     //printf("[k=%d] thread %d → i=%d, j=%d\n", k, threadIdx.x, i, j);
-
     
     if (i > 0 && j > 0 && i <= M && j <= N) {
         int idx = j * (M+1) + i;
@@ -60,6 +72,13 @@ __global__ void cuda_sw_kernel_shrink(
         H[idx] = h;
         E[idx] = e;
         F[idx] = f;
+
+        // 儲存最大值（只在值變大時記錄座標）
+        int old = atomicMax(&(d_max->score), h);
+        if (h > old) {
+            d_max->i = i;
+            d_max->j = j;
+        }
     }
 }
 
@@ -79,28 +98,33 @@ SmithWaterman cuda_smith_waterman(std::string_view ref, std::string_view query,
 
     int *dpH_dev, *dpE_dev, *dpF_dev;
     char *dev_ref, *dev_query;
+    MaxScore* d_max;
+    MaxScore h_max = {0, 0, 0};
+
 
     cudaMalloc(&dpH_dev, (M+1)*(N+1)*sizeof(int));
     cudaMalloc(&dpE_dev, (M+1)*(N+1)*sizeof(int));
     cudaMalloc(&dpF_dev, (M+1)*(N+1)*sizeof(int));
     cudaMalloc(&dev_ref, M * sizeof(char));
     cudaMalloc(&dev_query, N * sizeof(char));
+    cudaMalloc(&d_max, sizeof(MaxScore));
 
     cudaMemcpy(dpH_dev, H.data(), (M+1)*(N+1)*sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(dpE_dev, E.data(), (M+1)*(N+1)*sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(dpF_dev, F.data(), (M+1)*(N+1)*sizeof(int), cudaMemcpyHostToDevice);
     cudaMemcpy(dev_ref, ref.data(), M, cudaMemcpyHostToDevice);
     cudaMemcpy(dev_query, query.data(), N, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_max, &h_max, sizeof(MaxScore), cudaMemcpyHostToDevice);
 
 	// kernel implement
-    int threadsPerBlock = 256;
+    int threadsPerBlock = 1024;
     for (int k = 1; k <= min(M, N); ++k) {
         int totalThreads = k;
         int numBlocks = (totalThreads + threadsPerBlock - 1) / threadsPerBlock;
     
         cuda_sw_kernel_expand<<<numBlocks, threadsPerBlock>>>(
             dpH_dev, dpE_dev, dpF_dev, dev_ref, dev_query, 
-            k, M, N, match, mismatch, gap_open, gap_extend
+            k, M, N, match, mismatch, gap_open, gap_extend, d_max
         );
         cudaDeviceSynchronize();
     }
@@ -113,7 +137,7 @@ SmithWaterman cuda_smith_waterman(std::string_view ref, std::string_view query,
     
         cuda_sw_kernel_shrink<<<numBlocks, threadsPerBlock>>>(
             dpH_dev, dpE_dev, dpF_dev, dev_ref, dev_query,
-            k, M, N, match, mismatch, gap_open, gap_extend
+            k, M, N, match, mismatch, gap_open, gap_extend, d_max
         );
         cudaDeviceSynchronize();
     }    
@@ -121,12 +145,14 @@ SmithWaterman cuda_smith_waterman(std::string_view ref, std::string_view query,
     cudaMemcpy(H.data(), dpH_dev, (M+1)*(N+1)*sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(E.data(), dpE_dev, (M+1)*(N+1)*sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(F.data(), dpF_dev, (M+1)*(N+1)*sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&h_max, d_max, sizeof(MaxScore), cudaMemcpyDeviceToHost);
 
     cudaFree(dpH_dev);
     cudaFree(dpE_dev);
     cudaFree(dpF_dev);
     cudaFree(dev_ref);
     cudaFree(dev_query);
+    cudaFree(d_max);
 
     // Print H matrix
     //printf("\nScoring matrix H:\n");
@@ -137,19 +163,9 @@ SmithWaterman cuda_smith_waterman(std::string_view ref, std::string_view query,
     //    printf("\n");
     //}
 
-    for (int j = 1; j <= N; ++j) {
-        for (int i = 1; i <= M; ++i) {
-            int score = H[j * (M + 1) + i];
-            if (score > max_score) {
-                max_score = score;
-                max_i = i;
-                max_j = j;
-            }
-        }
-    }
-
     std::string aligned_ref, aligned_query, match_line;
-    int i = max_i, j = max_j;
+    int i = max_i = h_max.i, j = max_j = h_max.j;
+    max_score = h_max.score;
     while (i > 0 && j > 0 && H[j * (M+1) + i] > 0) {
         int idx      = j * (M+1) + i;
         int idx_diag = (j-1) * (M+1) + (i-1);

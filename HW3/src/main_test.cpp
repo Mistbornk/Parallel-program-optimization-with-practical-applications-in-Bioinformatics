@@ -94,7 +94,6 @@ int main(int argc, char* argv[]) {
     //result1 = naive_sw(seq1, seq2);
     //auto end1 = high_resolution_clock::now();
     //time_naive = duration_cast<duration<double, milli>>(end1 - start1).count();
-    ////cout << "GroundTruth Score: " << result1.score << "\n"; 
     //PrintOutcome(result1, "Naive", time_naive);
  
     // === striped smith waterman === //
@@ -127,6 +126,6 @@ int main(int argc, char* argv[]) {
     cout << std::fixed << std::setprecision(2);
     cout << "Speedup (CUDA / Striped): " << time_cuda/ time_striped << "x" << endl;
 
-    //randomTest();
+    randomTest();
     return 0;
 }
