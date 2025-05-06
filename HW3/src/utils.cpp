@@ -1,4 +1,4 @@
-#include "sw.h"
+#include "sw.hpp"
 #include <iostream>
 
 std::string read_fasta_sequence(const std::string& filename) {

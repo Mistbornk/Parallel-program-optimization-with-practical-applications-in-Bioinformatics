@@ -1,13 +1,13 @@
-#include "sw.h"
+#include "sw.hpp"
 #include <iomanip>
 #include <iostream>
 #include <chrono>
 #include <random>
 #include <unistd.h>
-
 #define TRY 100
 using namespace std;
 using namespace chrono;
+extern "C" void cuda_warmup();
 
 void randomTest() {
     std::cout << "==================================" << std::endl;
@@ -27,7 +27,7 @@ void randomTest() {
         for (int i = 0; i < len1; ++i) r += bases[base_dist(rng)];
         for (int i = 0; i < len2; ++i) q += bases[base_dist(rng)];
 
-        auto result1 = naive_sw(r, q);
+        auto result1 = striped_smith_waterman(r, q);
         auto result2 = cuda_smith_waterman(r, q);
         if (result1.score == result2.score) ++correct;
         //tuple t1 = {result1.start1, result1.start2, result1.end1, result1.end2};
@@ -73,6 +73,7 @@ void PrintOutcome(SmithWaterman& result, string method, double time_ms) {
 
     std::cout << std::fixed << std::setprecision(6);
     std::cout << "Alignment Score: " << result.score << "\n";
+    //std::cout << "End at (i, j): " << "(" << result.end1 << ", " << result.end2 << ")" << "\n";
     std::cout << "Time: " << time_ms << " ms" << std::endl;
 }
 
@@ -86,7 +87,8 @@ int main(int argc, char* argv[]) {
     string seq2 = read_fasta_sequence(argv[2]);
 
     SmithWaterman result1, result2, result3, result4;
-    double time_naive = 0.0, time_striped = 0.0, time_cuda = 0.0, time_banded = 0.0;
+    //double time_naive = 0.0, time_banded = 0.0;
+    double time_striped = 0.0, time_cuda = 0.0;
 
     // === Ground truth === //
     //cout << "==================================" << endl;
@@ -107,6 +109,7 @@ int main(int argc, char* argv[]) {
     
     // === cuda smith waterman === //
     cout << "==================================" << endl;
+    cuda_warmup();
     auto start3 = high_resolution_clock::now();
     result3 = cuda_smith_waterman(seq1, seq2);
     auto end3 = high_resolution_clock::now();
@@ -124,8 +127,8 @@ int main(int argc, char* argv[]) {
     // === Speedup === //
     cout << "==================================" << endl;
     cout << std::fixed << std::setprecision(2);
-    cout << "Speedup (CUDA / Striped): " << time_cuda/ time_striped << "x" << endl;
+    cout << "Speedup (Striped SW / Cuda SW): " << time_striped / time_cuda  << "x" << endl;
 
-    randomTest();
+    //randomTest();
     return 0;
 }
