@@ -30,7 +30,7 @@ __device__ int dev_max4(int a, int b, int c, int d) {
 }
 
 // kernel to compute diagonal wavefront, only using 3 row buffers
-__global__ void cuda_sw_wavefront_kernel(
+__global__ void cuda_sw_kernel(
     const char* ref, const char* query,
     int* H_prev2, int* H_prev1, int* H_curr,
     int* E_prev, int* E_curr,
@@ -117,7 +117,7 @@ SmithWaterman cuda_smith_waterman(std::string_view ref, std::string_view query,
         int threadsPerBlock = 256;
         int numBlocks = (thread_count + threadsPerBlock - 1) / threadsPerBlock;
     
-        cuda_sw_wavefront_kernel<<<numBlocks, threadsPerBlock>>>(
+        cuda_sw_kernel<<<numBlocks, threadsPerBlock>>>(
             d_ref, d_query,
             d_H_prev2, d_H_prev1, d_H_curr,
             d_E_prev, d_E_curr,

@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
 
     SmithWaterman result1, result2, result3, result4;
     //double time_naive = 0.0, time_banded = 0.0;
-    double time_naive = 0.0, time_striped = 0.0, time_cuda = 0.0;
+    double  time_striped = 0.0, time_cuda = 0.0;
 
     // === Ground truth === //
     //cout << "==================================" << endl;
