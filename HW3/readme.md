@@ -1,28 +1,73 @@
-- build
+# Striped Smith-Waterman (XSIMD) and CUDA Alignment
+
+github repository: [https://github.com/Mistbornk/Parallel-program-optimization-with-practical-applications-in-Bioinformatics](https://github.com/Mistbornk/Parallel-program-optimization-with-practical-applications-in-Bioinformatics)
+
+This project implements the Smith-Waterman local alignment algorithm in two modes:
+
+* **XSIMD-accelerated version** using `xsimd` for vectorized CPU performance
+* **CUDA version** using `cuda` for parallel GPU performance
+
+## Build Instructions
+
+### Prerequisites
+
+* C++20 compiler (e.g., `g++` version supporting `-std=c++20`)
+* `xsimd` header-only library (make sure it’s available in `./inc`)
+* NVIDIA CUDA Toolkit (for compiling the CUDA version)
+
+### Build
+
 ```bash
-# build
 make
-# use simple test
-make run
-# clean obj & exe
+```
+
+### Run Alignment Test
+
+You can test the implementation with:
+
+```bash
+make test
+```
+
+Or run manually with:
+
+```bash
+./main_test seq1.fa seq2.fa
+```
+
+You can also use command to generate sequence
+```bash
+./generate.sh <ref length> <query length>
+```
+
+### Clean
+
+To remove compiled objects and executable:
+
+```bash
 make clean
 ```
-- usage
-```
-Usage: ./aligment [options] <seq1.fasta> <seq2.fasta>
 
-Options:
-  -m <int>     Match score (default: 2)
-  -x <int>     Mismatch penalty (default: -1)
-  -o <int>     Gap open penalty (default: -2)
-  -e <int>     Gap extension penalty (default: -1)
-  -b <int>     Band width (default: 10)
-  -h, --help   Show this help message
-
-# note:
-# -b only modify the band width of baseline version
+## A Example Expected Output Format
+With reference = 20kbp, query = 20kbp
 ```
-- Notes
-  - The baseline implementation uses banded Smith-Waterman, which only computes scores near the diagonal. Therefore, when the two sequences differ significantly in length and the band width is small, only the beginning portion of the longer sequence may be computed.
-  
-  - The SIMD version first uses SIMD instructions to quickly identify the highest-scoring alignment end position, then traces back to find the start position, thereby determining an alignment region. The final alignment within this region is computed using the baseline banded Smith-Waterman. In this case, **the band width is automatically determined** and is set to **the length difference between the two sequences plus 50**.
+Running test case:
+./main_test seq1.fa seq2.fa
+==================================
+Method: Striped
+Seq1:     ...
+
+Seq2:     ...
+Alignment Score: 15091
+Time: 1972.122222 ms
+==================================
+Method: CUDA
+Seq1:     ...
+
+Seq2:     ...
+Alignment Score: 15091
+Time: 811.441891 ms
+==================================
+Speedup (Striped SW / Cuda SW): 2.43x (uaually 2x ~ 3x at this case)
+```
+---

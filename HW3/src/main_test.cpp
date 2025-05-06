@@ -9,6 +9,12 @@ using namespace std;
 using namespace chrono;
 extern "C" void cuda_warmup();
 
+void striped_warmup() {
+    std::string dummy1(128, 'A');
+    std::string dummy2(128, 'A');
+	striped_smith_waterman(dummy1, dummy2);
+}
+
 void randomTest() {
     std::cout << "==================================" << std::endl;
     std::cout << "Random test comparison ("<<TRY<<" runs)" << std::endl;
@@ -67,9 +73,11 @@ void PrintOutcome(SmithWaterman& result, string method, double time_ms) {
     }
 
     std::cout << "Method: " << method << "\n\n";
-    std::cout << "Seq1:  " << std::setw(5) << result.start1 << "   " << colored_seq1 << "   " << result.end1 << "\n";
-    std::cout << "       " << "        " << colored_match << "\n";
-    std::cout << "Seq2:  " << std::setw(5) << result.start2 << "   " << colored_seq2 << "   " << result.end2 << "\n";
+    if (method != "naive") {
+        std::cout << "Seq1:  " << std::setw(5) << result.start1 << "   " << colored_seq1 << "   " << result.end1 << "\n";
+        std::cout << "       " << "        " << colored_match << "\n";
+        std::cout << "Seq2:  " << std::setw(5) << result.start2 << "   " << colored_seq2 << "   " << result.end2 << "\n";
+    }
 
     std::cout << std::fixed << std::setprecision(6);
     std::cout << "Alignment Score: " << result.score << "\n";
@@ -88,7 +96,7 @@ int main(int argc, char* argv[]) {
 
     SmithWaterman result1, result2, result3, result4;
     //double time_naive = 0.0, time_banded = 0.0;
-    double time_striped = 0.0, time_cuda = 0.0;
+    double time_naive = 0.0, time_striped = 0.0, time_cuda = 0.0;
 
     // === Ground truth === //
     //cout << "==================================" << endl;
@@ -100,6 +108,7 @@ int main(int argc, char* argv[]) {
  
     // === striped smith waterman === //
     cout << "==================================" << endl;
+    striped_warmup();
     auto start2 = high_resolution_clock::now();
     result2 = striped_smith_waterman(seq1, seq2);
     auto end2 = high_resolution_clock::now();
